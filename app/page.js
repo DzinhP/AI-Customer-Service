@@ -13,21 +13,23 @@ export default function Home() {
 
 
   const sendMessage = async () => {
-    setMessages('')
+    if (!message.trim()) return;
+    setMessage('');
     setMessages((messages) => [ 
       ...messages,
       {role: 'user', content: message},
       {role: 'assistant', content:''}
     ])
-    const response = fetch('api/chat', {
+    
+    const response = fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify([...messages, {role: 'user', content: message}]),
-    }).then(async(response) => {
+    }).then(async(res) => {
 
-      const reader = response.body.getReader()
+      const reader = res.body.getReader()
       const decoder = new TextDecoder()
 
       let result = '';
@@ -37,14 +39,15 @@ export default function Home() {
         }
         const text = decoder.decode(value || new Int8Array(), {stream:true})
         setMessages((messages) =>{
+          console.log(messages);
           let lastMessage = messages[messages.length - 1]
-          let otherMessages = message.slice(0, messages,length-1)
-          return [
+          let otherMessages = message.slice(0, messages.length-1)
+          return ([
             ...otherMessages,{
             ...lastMessage,
-             content: lastMessage.content + text
+             content: lastMessage.content + text,
             },
-          ]
+          ])
         })
         return reader.read().then(processText)
       })
@@ -63,7 +66,7 @@ export default function Home() {
       <Stack
         direction={'column'}
         width="500px"
-        height="550px"
+        height="600px"
         border="1px solid black"
         p={2}
         spacing={3}

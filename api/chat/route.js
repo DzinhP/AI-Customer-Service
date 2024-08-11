@@ -3,10 +3,7 @@ import OPENAI from 'openai';
 const systemPrompt = 'You are an AI customer support bot. You are helping Headstarter AI for their AI powered interview support.';
 
 export async function POST(req) {
-     const openai = new OPENAI({
-          apiKey: process.env.local.OPENAI_API_KEY, 
-
-     });
+     const openai = new OPENAI();
      const data = await req.json();
 
      const completion = await openai.chatCompletion({
@@ -26,14 +23,15 @@ export async function POST(req) {
                const encoder = new TextEncoder();
                try {
                     for await (const chunk of completion) {
-                         const content = chunk.choices[0]?.delta.content;
+                         const content = chunk.choices[0]?.delta?.content;
                          if (content) {
-                              controller.enqueue(encoder.encode(content));
+                              const text = encoder.encode(content);
+                              controller.enqueue(text);
                          }
                     }
                }
-               catch(error){
-                    controller.error(error);
+               catch(err){
+                    controller.error(err);
                }
                finally {
                     controller.close();
@@ -41,5 +39,5 @@ export async function POST(req) {
           }
      })
 
-     return new NextResponse(stream)
+     return new NextResponse(stream);
 }
